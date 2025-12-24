@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="CPPOS.vcxproj" Id="6533808d-b3d2-4961-9604-74f4149c85f9" />
+</Solution>
