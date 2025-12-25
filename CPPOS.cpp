@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <array>
+#include <algorithm>
 
 int checkButtonBounds(int x, int y, int w, int h) {
     float mouseX = GetMouseX();
@@ -36,8 +37,89 @@ void createWindow(
     windowProps.push_back({ "name", "test"});
 }
 
+std::vector<std::string> compileCode(std::string code) { //ts kinda tuff ngl
+    const std::vector<std::string> functions = {
+        "echo",
+        "test",
+	};
+
+    std::cout << "compiling code: " << code << "\n";
+
+    std::vector<std::string> bytecode;
+
+    for (int i = 0; i < 1; i++) {
+    struct {
+        int opcode = 0;
+        std::vector<std::string> args;
+    } command;
+
+
+    std::string output;
+    std::string fn;
+    std::string arg;
+    bool argMode= false;
+    bool insideString = false;
+    bool error = false;
+    int k = 0;
+    int j = 0;
+    for (int i = 0; i < code.length(); i++) {
+        char token = code[i];
+        switch (token) {
+        case '(':
+            if (!argMode) {
+                fn = output;
+                output = "";
+                argMode = true;
+                continue;
+            }
+            else {
+                if (token != '\'') {
+                    error = true;
+                }
+            }
+        case ')':
+            arg = output;
+        default:
+            if (token != ' ') {
+                output += token;
+            }
+        }
+    }
+
+    argMode = false;
+
+    int fnIndex = std::find(functions.begin(), functions.end(), fn) - functions.begin();
+
+    std::cout << "output:" << output << "\n";
+    std::cout << "function: " << fn << "\n";
+
+
+    std::cout << "function id: " << fnIndex << "\n";
+
+    command.args.resize(j+1);
+
+    command.opcode = fnIndex;
+    command.args[j] = arg;
+
+    std::cout << "opcode:" << command.opcode << "\n";
+    std::cout << "args:" << command.args[j] << "\n";
+
+    bytecode.resize(k + 1);
+    //bytecode[k] = command;
+
+    j++;
+    }
+
+    return bytecode;
+}
+
 int main(void)
 {
+
+    //testing custom programming language
+    //compileCode("echo('test')");
+
+    //return 0;
 
     //initial setup
 
@@ -50,11 +132,9 @@ int main(void)
 
     std::vector<std::array<float, 6>> windows;
     windows.push_back({ 100, 0, 400, 300, 0, 0 });    //x, y, w, h, minimized, maximized
-    windows.push_back({0, 0, 400, 300, 0, 0});    //x, y, w, h, minimized, maximized
 
     std::vector<std::array<std::string, 2>> windowProps;
     windowProps.push_back({ "test", "test" });    //name, icon name
-    windowProps.push_back({ "test", "test"});    //name, icon name
 
 
     //load textures
@@ -63,6 +143,7 @@ int main(void)
     Texture2D closeIco = LoadTexture("images/icons/close.png");
     Texture2D minimizeIco = LoadTexture("images/icons/minimize.png");
     Texture2D maximizeIco = LoadTexture("images/icons/maximize.png");
+    Texture2D programIco = LoadTexture("images/icons/program.png");
 
     bool isSelectingDesktop = false;
     int movingWindowID = -1;
@@ -230,7 +311,10 @@ int main(void)
                 }
 
                 //window title :O
-                DrawText(windowProps[i][0].c_str(), x + 20, y + barHeight / 4, 17, BLACK);
+                DrawText(windowProps[i][0].c_str(), x + 35, y + 6, 17, BLACK);
+
+                //window icon
+                DrawTextureEx(programIco, { x+ 5, y + barHeight/20 }, 0, 1.5, WHITE);
 
                 float bx; float by; float bx1; float by1;
 
@@ -287,8 +371,8 @@ int main(void)
                         //dragging magic happens right here
 
                         if (windows[i][5]) {
-                            xOffs = 0;
-                            yOffs = 0;
+                            xOffs = 0-w/4;
+                            yOffs = 0-barHeight/2;
                         }
                         else {
                             xOffs = x - GetMouseX();
@@ -369,6 +453,12 @@ int main(void)
             bool hoveringIcon = false;
             if (checkButtonBounds(x, y, w, h)) {
                 hoveringIcon = true;
+                int padding = 10;
+                const char* text = "test"; int fontsize = 20;
+                float textW = MeasureText(text, fontsize);
+                DrawRectangle(x-padding, y-h+15-padding, textW+padding*2,20+padding*2, BLACK);
+                DrawText(text, x, y - h+15, 20, WHITE);
+
                 if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
                     DrawRectangle(x, y, w, h, WHITE);
                 }
@@ -402,6 +492,7 @@ int main(void)
     UnloadTexture(closeIco);
     UnloadTexture(minimizeIco);
     UnloadTexture(maximizeIco);
+    UnloadTexture(programIco);
 
     return 0;
 }
@@ -410,5 +501,5 @@ int main(void)
 //
 // --- Window Manager ---
 // Axolay (aka Greedy Allay)
-//
+//  
 //
