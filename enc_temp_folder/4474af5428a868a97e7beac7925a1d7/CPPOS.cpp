@@ -366,9 +366,7 @@ int main(void)
 
         for (int i = 0; i < windows.size(); i++) {
             float x = i * (appWidth + tbGap) + startBtnW + tbGap; float y = screenHeight - appWidth; float w = appWidth; float h = appWidth;
-            bool hoveringIcon = false;
             if (checkButtonBounds(x, y, w, h)) {
-                hoveringIcon = true;
                 if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
                     DrawRectangle(x, y, w, h, WHITE);
                 }
@@ -405,10 +403,3 @@ int main(void)
 
     return 0;
 }
-
-//credits:
-//
-// --- Window Manager ---
-// Axolay (aka Greedy Allay)
-//
-//
