@@ -37,7 +37,9 @@ void createWindow(
     windowProps.push_back({ "name", "test"});
 }
 
-std::vector<std::string> compileCode(std::string code) { //ts kinda tuff ngl
+//std::vector<struct command>
+#if 0
+void compileCode(std::string code) { //ts kinda tuff ngl
     const std::vector<std::string> functions = {
         "echo",
         "test",
@@ -45,10 +47,10 @@ std::vector<std::string> compileCode(std::string code) { //ts kinda tuff ngl
 
     std::cout << "compiling code: " << code << "\n";
 
-    std::vector<std::string> bytecode;
+    std::vector<struct Command> bytecode;
 
     for (int i = 0; i < 1; i++) {
-    struct {
+    struct Command {
         int opcode = 0;
         std::vector<std::string> args;
     } command;
@@ -75,18 +77,31 @@ std::vector<std::string> compileCode(std::string code) { //ts kinda tuff ngl
             else {
                 if (token != '\'') {
                     error = true;
+                    std::cout << "error";
+                }
+                else {
+                    if (insideString) {
+                        insideString = false;
+                        continue;
+                    }
+                    else {
+                        insideString = true;
+                        continue;
+                    }
+
                 }
             }
         case ')':
             arg = output;
         default:
-            if (token != ' ') {
+            if (token != ' ' && !insideString) {
                 output += token;
             }
         }
     }
 
     argMode = false;
+    insideString = false;
 
     int fnIndex = std::find(functions.begin(), functions.end(), fn) - functions.begin();
 
@@ -105,13 +120,15 @@ std::vector<std::string> compileCode(std::string code) { //ts kinda tuff ngl
     std::cout << "args:" << command.args[j] << "\n";
 
     bytecode.resize(k + 1);
-    //bytecode[k] = command;
+    //bytecode.push_back(command) = command;
 
     j++;
     }
 
-    return bytecode;
+    //return bytecode;
 }
+
+#endif
 
 int main(void)
 {
@@ -454,7 +471,7 @@ int main(void)
             if (checkButtonBounds(x, y, w, h)) {
                 hoveringIcon = true;
                 int padding = 10;
-                const char* text = "test"; int fontsize = 20;
+                const char* text = "i love to shit my pants.exe"; int fontsize = 20;
                 float textW = MeasureText(text, fontsize);
                 DrawRectangle(x-padding, y-h+15-padding, textW+padding*2,20+padding*2, BLACK);
                 DrawText(text, x, y - h+15, 20, WHITE);
@@ -481,8 +498,49 @@ int main(void)
                 DrawRectangle(x, y, w, h, GRAY);
 
             }
+
         }
 
+
+
+		//the best game ever is not called CPPOS, its called raylib... sike! its called not that, its also not called that, its called poopity scoopity whoopity woo why did you do that? because i am bored okay... why are you bored? because i have no friends... me too thanks. I'm sorry you feel that way. here's a cookie. *hands cookie* thanks! *eats cookie* mmm... this cookie is good. i'm glad you like it. yeah me too. wanna be friends? sure! yay! friends forever! yep! the end.
+
+        //testing some custom hightlighting stuff for text i came up with
+
+        std::string text = "what\ndamn";
+
+        float startX = windows[0][0];
+        float startY = windows[0][1] + 30;
+
+        float charX = startX;
+        float charY = startY;
+        float textSize = 20;
+        float spacing = 4;
+        float line = 0;
+
+        for (int i = 0; i < text.length(); i++) {
+			std::string chara(1, text[i]);
+            if (text[i] == '\n') {
+                line++;
+                charX = startX;
+                continue;
+            }
+
+            Vector2 textDims = MeasureTextEx(GetFontDefault(), chara.c_str(), textSize, 0);
+            float lineHeight = textDims.y;
+
+            if (i % 2 == 0) {
+                DrawText(chara.c_str(), charX, charY + (lineHeight* line), textSize, BLUE);
+            }
+            else {
+                DrawText(chara.c_str(), charX, charY + (lineHeight * line), textSize, RED);
+
+            }
+
+            charX += textDims.x + spacing;
+
+
+        }
 
         EndDrawing();
     }
@@ -497,9 +555,11 @@ int main(void)
     return 0;
 }
 
-//credits:
+//        credits
 //
 // --- Window Manager ---
 // Axolay (aka Greedy Allay)
 //  
 //
+
+//why does it say compileCode::Command *': unknown size? 
