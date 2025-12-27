@@ -3,6 +3,35 @@
 #include <vector>
 #include <array>
 #include <algorithm>
+#include <string>
+
+float screenWidth = 800;
+float screenHeight = 450;
+
+std::vector<std::array<float, 6>> windows;
+std::vector<std::array<std::string, 2>> windowProps;
+
+#define useTextureMode 0; //better performance, but breaks whenever resized
+
+#define debugInfo 0;
+
+int getWinProps(int id, int property) {
+    if (id < 0 || id >= windows.size()) {
+        return -1;
+    }
+    if (windows[id][5]) {
+        if (property == 0||property == 1) { // x and y
+            return 0;
+        }
+        else if (property == 2) { //wdth
+            return screenWidth;
+        }
+        else if (property == 3) { //height
+            return screenHeight;
+        }
+    }
+    return windows[id][property];
+}
 
 int checkButtonBounds(int x, int y, int w, int h) {
     float mouseX = GetMouseX();
@@ -30,30 +59,33 @@ int checkCircleBounds(int x, int y, int radii) {
 }
 
 void createWindow(
-    std::vector<std::array<float, 4>>& windows,
-    std::vector<std::array<std::string, 2>>& windowProps,
-    int x, int y, int w, int h, int title
-) {
-    windowProps.push_back({ "name", "test"});
+    float x, float y, float w, float h, float minimized, float fullscreen) {
+    windows.push_back({ x, y, w, h, minimized, fullscreen });    //x, y, w, h, minimized, maximized
+
 }
 
 //std::vector<struct command>
-#if 0
+//#if 0
 void compileCode(std::string code) { //ts kinda tuff ngl
     const std::vector<std::string> functions = {
         "echo",
         "test",
+        "createText",
+        ""
 	};
 
+#if debugInfo
     std::cout << "compiling code: " << code << "\n";
-
-    std::vector<struct Command> bytecode;
+#endif
 
     for (int i = 0; i < 1; i++) {
     struct Command {
         int opcode = 0;
         std::vector<std::string> args;
     } command;
+    std::vector<struct Command> bytecode;
+
+
 
 
     std::string output;
@@ -75,9 +107,10 @@ void compileCode(std::string code) { //ts kinda tuff ngl
                 continue;
             }
             else {
-                if (token != '\'') {
+                if (token != '\"') {
                     error = true;
                     std::cout << "error";
+                    
                 }
                 else {
                     if (insideString) {
@@ -94,7 +127,7 @@ void compileCode(std::string code) { //ts kinda tuff ngl
         case ')':
             arg = output;
         default:
-            if (token != ' ' && !insideString) {
+            if ((token != ' ' && !insideString) || insideString) {
                 output += token;
             }
         }
@@ -105,54 +138,79 @@ void compileCode(std::string code) { //ts kinda tuff ngl
 
     int fnIndex = std::find(functions.begin(), functions.end(), fn) - functions.begin();
 
+#if debugInfo
+
     std::cout << "output:" << output << "\n";
     std::cout << "function: " << fn << "\n";
 
 
     std::cout << "function id: " << fnIndex << "\n";
 
+#endif
+
     command.args.resize(j+1);
 
     command.opcode = fnIndex;
-    command.args[j] = arg;
+    command.args[0] = arg;
+
+#if debugInfo
 
     std::cout << "opcode:" << command.opcode << "\n";
     std::cout << "args:" << command.args[j] << "\n";
 
-    bytecode.resize(k + 1);
-    //bytecode.push_back(command) = command;
+#endif
+
+    bytecode.push_back(command);
 
     j++;
+
+    for (int i = 0; i < bytecode.size(); i++) {
+        switch (bytecode[i].opcode) {
+            default: 
+                std::cout << "no\n";
+            case 0:
+                std::cout << bytecode[i].args[0];
+            case 1:
+                std::cout << "test complete!\n";
+            case 2:
+                DrawText(bytecode[i].args[0].c_str(), 0, 0, 20, RED);
+
+        }
+    }
     }
 
     //return bytecode;
 }
 
-#endif
+//#endif
 
 int main(void)
 {
-
     //testing custom programming language
-    //compileCode("echo('test')");
+    compileCode("echo(test\n)");
+    compileCode("test()");
 
     //return 0;
 
     //initial setup
 
-    float screenWidth = 800;
-    float screenHeight = 450;
+    createWindow(50, 50, 400, 300, 0, 0);
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 
     InitWindow(screenWidth, screenHeight, "CPPos");
 
-    std::vector<std::array<float, 6>> windows;
-    windows.push_back({ 100, 0, 400, 300, 0, 0 });    //x, y, w, h, minimized, maximized
-
-    std::vector<std::array<std::string, 2>> windowProps;
     windowProps.push_back({ "test", "test" });    //name, icon name
 
+#if useTextureMode
+
+    RenderTexture2D desktopRender = LoadRenderTexture(screenWidth, screenHeight);
+
+    BeginTextureMode(desktopRender);
+    ClearBackground(WHITE);
+    EndTextureMode();
+
+#endif
 
     //load textures
 
@@ -174,7 +232,7 @@ int main(void)
     float xOffs = 0;
     float yOffs = 0;
 
-    SetTargetFPS(200);
+    SetTargetFPS(20000);
 
     //setup filesystem
 
@@ -182,6 +240,8 @@ int main(void)
 
     //fs.push_back({ "shjt","shjt", "shjt", "shjt" }); //id
 
+    BeginDrawing();
+    ClearBackground(WHITE);
 
 
     // Main game loop
@@ -189,7 +249,11 @@ int main(void)
     {
 
         BeginDrawing();
-        ClearBackground(WHITE);
+
+        #if useTextureMode
+        BeginTextureMode(desktopRender);
+        #endif
+
 
         screenWidth = GetScreenWidth();
         screenHeight = GetScreenHeight();
@@ -210,7 +274,11 @@ int main(void)
             bgSize = bgCalcH;
             //x = x + (screenWidth*bgSize) + screenWidth/2;
         }
-        DrawTextureEx(bg, { x, y }, 0, bgSize, WHITE);
+
+        DrawTextureEx(bg, { x, y }, 0, bgSize, WHITE); //the background gets drawn riiiiiight here my son
+
+        compileCode("drawText(\"HOLY FUCKING SHIT\")");
+
 
         //render desktop selection
         if (false) {
@@ -236,6 +304,8 @@ int main(void)
         }
 
         //window rendering
+
+
 
         if (windowToClose != -1) {
             windows.erase(windows.begin() + windowToClose);
@@ -297,6 +367,10 @@ int main(void)
                 int topButtonSize = 10;
                 bool isHoveringTopButtons = false;
                 if (roundCorners && !windows[i][5]) {
+
+                    //RenderTexture2D drawWindow = LoadRenderTexture(screenWidth, screenHeight);
+                    //BeginTextureMode(drawWindow);
+                    // 
                     //background of window
                     DrawRectangle(x - borderWidth + borderRadius, y - borderWidth + borderRadius, w - borderRadius - borderWidth * 2, h - borderRadius - borderWidth * 2, WHITE);
 
@@ -320,6 +394,8 @@ int main(void)
                     //topbar bar under the rounded corners
                     DrawRectangle(x, y + borderRadius, w, borderRadius * 2, LIGHTGRAY);
 
+                    //EndTextureMode();
+                    //DrawTextureRec(drawWindow.texture, Rectangle{ x, 0 - y, w, h }, Vector2{ x, y }, WHITE);
                 }
                 else {
                     DrawRectangle(x - borderWidth, y - borderWidth, w + borderWidth * 2, h + borderWidth * 2, BLACK);
@@ -404,7 +480,7 @@ int main(void)
                 }
 
                 //resizing handles for specific sides
-                if (movingWindowID == -1 && resizingWindowID == -1) {
+                if (movingWindowID == -1 && resizingWindowID == -1 && !windows[i][5]) {
                     if (checkButtonBounds(x, y, w, resizeHandleSize)) {
                         //DrawRectangle(x, y, w, resizeHandleSize, RED);
                         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -507,42 +583,62 @@ int main(void)
 
         //testing some custom hightlighting stuff for text i came up with
 
-        std::string text = "what\ndamn";
 
-        float startX = windows[0][0];
-        float startY = windows[0][1] + 30;
+
+        float width = getWinProps(0, 2);
+        float height = getWinProps(0, 3);
+
+        float textSize = 20;
+        float spacing = 2;
+        float line = 0;
+
+        float startX = getWinProps(0, 0) + spacing;
+        float startY = getWinProps(0, 1) + 30;
 
         float charX = startX;
         float charY = startY;
-        float textSize = 20;
-        float spacing = 4;
-        float line = 0;
+
+        int clipW;
+        int clipH;
+
+        //BeginScissorMode(charX, charY, width, height);
+
+        std::string text = "x: " + std::to_string(startX)+" y: " + std::to_string(startY)+ " w: " + std::to_string(width) + " h: " + std::to_string(height);
 
         for (int i = 0; i < text.length(); i++) {
 			std::string chara(1, text[i]);
-            if (text[i] == '\n') {
+
+            Vector2 textDims = MeasureTextEx(GetFontDefault(), chara.c_str(), textSize, 0);
+            float lineHeight = textDims.y;
+
+            if (
+                text[i] == '\n' ||
+                charX + textDims.x + spacing*2 > startX+width
+                ) {
                 line++;
                 charX = startX;
                 continue;
             }
 
-            Vector2 textDims = MeasureTextEx(GetFontDefault(), chara.c_str(), textSize, 0);
-            float lineHeight = textDims.y;
+            MeasureText(chara.c_str(), textSize);
 
-            if (i % 2 == 0) {
-                DrawText(chara.c_str(), charX, charY + (lineHeight* line), textSize, BLUE);
-            }
-            else {
-                DrawText(chara.c_str(), charX, charY + (lineHeight * line), textSize, RED);
+            DrawText(chara.c_str(), charX, charY + (lineHeight * line), textSize, BLACK);
 
-            }
 
             charX += textDims.x + spacing;
 
 
         }
+        //EndScissorMode();
+#if useTextureMode
+        EndTextureMode();
+
+        DrawTextureRec(desktopRender.texture, Rectangle{ 0, 0, screenWidth, 0-screenHeight }, Vector2{ 0, 0 }, WHITE);
+
+#endif
 
         EndDrawing();
+
     }
     CloseWindow();
 
@@ -551,7 +647,9 @@ int main(void)
     UnloadTexture(minimizeIco);
     UnloadTexture(maximizeIco);
     UnloadTexture(programIco);
-
+#if useTextureMode
+    UnloadRenderTexture(desktopRender);
+#endif
     return 0;
 }
 
