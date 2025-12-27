@@ -115,37 +115,20 @@ void compileCode(std::string code) { //ts kinda tuff ngl
 
     // value scanning cat (this cat scans the value :3)
     for (i = i; i < code.length(); i++) {
-        char token = code[i];
         std::cout << "CANCER\n";
-        if (dataType == -1) {
-            if (code.substr(i, i + 4) == "true") {
-                i += 4;
-                dataType = 0;
-                output = "true";
-                std::cout << "YES\n";
-                break;
-            } else if (code.substr(i, i + 5) == "false") {
-                i += 5;
-                dataType = 0;
-                output = "false";
-                std::cout << "YES\n";
-                break;
-            }
-            else if (isdigit(token)) {
-                dataType = 1;
-            }
+        if (code.substr(i, i + 4) == "true") {
+            i += 4;
+            dataType = 0;
+            output = "true";
+            std::cout << "YES\n";
+            break;
+        } else if (code.substr(i, i + 5) == "false") {
+            i += 5;
+            dataType = 0;
+            output = "false";
+            std::cout << "YES\n";
+            break;
         }
-        else {
-            if ((dataType == 2 && token == '"')) {
-                //we've reached the end of the string
-            }
-            if (token == ')') {
-                //finally! done!! YESSSS FUCKING FINALLY OUT OF THIS NIGHTMARE HOLE LOOP
-            }
-            if (token == ',') {
-                //repeat the loop for the next argument
-            }
-
         std::cout << "datatype: " + std::to_string(dataType) << "\n";
         std::cout << "output " << output << "\n";
          // continue to check for more arguments if there's a comma obv otherwise u could only have 1 which is useless uknow
