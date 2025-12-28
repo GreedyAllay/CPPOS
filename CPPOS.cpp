@@ -11,9 +11,9 @@ float screenHeight = 450;
 std::vector<std::array<float, 6>> windows;
 std::vector<std::array<std::string, 2>> windowProps;
 
-#define useTextureMode 0; //better performance, but breaks whenever resized
+#define useTextureMode 0; //better performance, but breaks whenever resized for some reason
 
-#define debugInfo 0;
+#define debugInfo 0; 
 
 int getWinProps(int id, int property) {
     if (id < 0 || id >= windows.size()) {
@@ -109,51 +109,119 @@ void compileCode(std::string code) { //ts kinda tuff ngl
 
 
     int dataType = -1; // 0 = boolean, 1 = digit, 2 = string, 3 = var
-    std::cout << code[i];
-    std::cout << i;
+    bool endLoop = false;
+    std::vector<std::string> arguments;
 
-
-    // value scanning cat (this cat scans the value :3)
     for (i = i; i < code.length(); i++) {
-        char token = code[i];
-        std::cout << "CANCER\n";
-        if (dataType == -1) {
-            if (code.substr(i, i + 4) == "true") {
-                i += 4;
-                dataType = 0;
-                output = "true";
-                std::cout << "YES\n";
-                break;
-            } else if (code.substr(i, i + 5) == "false") {
-                i += 5;
-                dataType = 0;
-                output = "false";
-                std::cout << "YES\n";
-                break;
+        if (endLoop) { break; }
+        // value scanning cat (this cat scans the value :3)
+        for (i = i; i < code.length(); i++) {
+            char token = code[i];
+            //determine what datatype it could possibly be
+            if (dataType == -1) {
+                if (code.substr(i, 4) == "true") {
+                    i += 4;
+                    dataType = 0;
+                    output = "true";
+                    break;
+                }
+                else if (code.substr(i, 5) == "false") {
+                    i += 5;
+                    dataType = 0;
+                    output = "false";
+                    break;
+                }
+                else if (isdigit(token)) {
+                    dataType = 1;
+                    output += token;
+                }
+                else if (token == '"') {
+                    dataType = 2;
+                    continue;
+                }
             }
-            else if (isdigit(token)) {
-                dataType = 1;
+            //now we like scan the rest of this stupid shit till we reach the end at some point i hope
+            else {
+                if (token == ',') {
+                    dataType == -1;
+                    std::cout << "detected comma, geez this is scary, we've never encountered something like this before, will it work?";
+                    arguments.push_back(output);
+                    output = "";
+                    continue;
+                }
+                if (dataType == 1) {
+                    if (token == ')') {
+                        endLoop = true;
+                        arguments.push_back(output);
+                        output = "";
+                        break;
+                    }
+                    else {
+                        output += token;
+                    }
+                }
+                else if (dataType == 2) {
+                    if (token == '"') {
+                        endLoop = true;
+                        arguments.push_back(output);
+                        output = "";
+                        break;
+
+                    }
+                    else {
+                        output += token;
+                    }
+                }
+                else if (dataType == 3) {
+                    if (token == ')') {
+                        endLoop = true;
+                        arguments.push_back(output);
+                        output = "";
+                        break;
+                    }
+                    else {
+                        output += token;
+                    }
+                }
+
+                // continue to check for more arguments if there's a comma obv otherwise u could only have 1 which is useless uknow
             }
         }
-        else {
-            if ((dataType == 2 && token == '"')) {
-                //we've reached the end of the string
-            }
-            if (token == ')') {
-                //finally! done!! YESSSS FUCKING FINALLY OUT OF THIS NIGHTMARE HOLE LOOP
-            }
-            if (token == ',') {
-                //repeat the loop for the next argument
-            }
-
-        std::cout << "datatype: " + std::to_string(dataType) << "\n";
-        std::cout << "output " << output << "\n";
-         // continue to check for more arguments if there's a comma obv otherwise u could only have 1 which is useless uknow
     }
 
+        //we done bitch
+        std::cout << "argument: " << output << "\n";
+        std::cout << "datatype: " + std::to_string(dataType) << "\n";
+        for (int i = 0; i < arguments.size(); i++) {
+            std::cout << "argumentos: " + arguments[i] << "\n";
+
+        }
+        std::cout << "---\n";
 
     //std::cout << opcode;
     //std::cout << output;
+
+
+    //*read until you have a "(". do this inside of the character scanning loop 
+
+    //then store the index of this function from the function list inside of a variable and reset the output variable
+
+    //*break, and create a new loop that does the same so it can be re - used
+
+    //then, scan without storing until you reach a valid token(to prevent whitespace errors)
+
+    //*then check what type this value is.If it starts with ", then it's a string,
+    //if it's a number, its a number, if it is equal to true or false a boolean, if it starts with anything but these,
+    //assume it's a variable.
+
+    //*Then scan and append each token until you reach ), " or ", ". in the case of a string, scan until you
+    //reach the " and then check if there's a ) or ", " after that. If there's a ", ", restart this loop and increase the argument count by 1 so we can store it as another one later, until we finally reach a ).
+
+    //*then store the scanned values into the args variable, repeat
+
+    //then repeat the entire thing until you reach the end.There's your little bytecode interpreter
+
+        //woah, really? 
 
 }
 
@@ -162,7 +230,11 @@ void compileCode(std::string code) { //ts kinda tuff ngl
 int main(void)
 {
     //testing custom programming language
+    compileCode("echo(6921213242387543)");
     compileCode("echo(false)");
+    compileCode("echo(true)");
+    compileCode("echo(\"hello there\")");
+    compileCode("echo(69, 21)");
 
     //return 0;
 
@@ -632,3 +704,6 @@ int main(void)
 // --- Window Manager ---
 // Axolay (aka Greedy Allay)
 //  
+//    --- Compiler ---
+// Axolay (aka Greedy Allay)
+
