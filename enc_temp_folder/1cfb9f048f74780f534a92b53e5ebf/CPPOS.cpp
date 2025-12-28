@@ -282,7 +282,7 @@ int main(void)
     );
 
     execute(
-        compileCode("drawText(\"YOUR MOM :D\", 69, 21, 20, 20)")
+        compileCode("drawText(\"SEXUAL ABUSE :D\", 69, 21, 20, 20)")
     );
     //return 0;
 
