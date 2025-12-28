@@ -15,6 +15,8 @@ std::vector<std::array<std::string, 2>> windowProps;
 
 #define debugInfo 0; 
 
+#define themeColor BLACK;
+
 int getWinProps(int id, int property) {
     if (id < 0 || id >= windows.size()) {
         return -1;
@@ -143,7 +145,7 @@ void compileCode(std::string code) { //ts kinda tuff ngl
             //now we like scan the rest of this stupid shit till we reach the end at some point i hope
             else {
                 if (token == ',') {
-                    dataType == -1;
+                    dataType = -1;
                     std::cout << "detected comma, geez this is scary, we've never encountered something like this before, will it work?";
                     arguments.push_back(output);
                     output = "";
@@ -187,16 +189,20 @@ void compileCode(std::string code) { //ts kinda tuff ngl
                 // continue to check for more arguments if there's a comma obv otherwise u could only have 1 which is useless uknow
             }
         }
-    }
-
         //we done bitch
         std::cout << "argument: " << output << "\n";
         std::cout << "datatype: " + std::to_string(dataType) << "\n";
         for (int i = 0; i < arguments.size(); i++) {
             std::cout << "argumentos: " + arguments[i] << "\n";
-
         }
-        std::cout << "---\n";
+        break;
+    }
+
+    std::cout << "opcode: " << opcode << "\n";
+    std::cout << "---\n";
+
+    //create bytecode right the fuck now
+
 
     //std::cout << opcode;
     //std::cout << output;
@@ -230,10 +236,10 @@ void compileCode(std::string code) { //ts kinda tuff ngl
 int main(void)
 {
     //testing custom programming language
-    compileCode("echo(6921213242387543)");
-    compileCode("echo(false)");
-    compileCode("echo(true)");
-    compileCode("echo(\"hello there\")");
+    //compileCode("echo(6921213242387543)");
+    //compileCode("echo(false)");
+    //compileCode("echo(true)");
+    //compileCode("echo(\"hello there\")");
     compileCode("echo(69, 21)");
 
     //return 0;
@@ -466,13 +472,14 @@ int main(void)
                     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                         windowToClose = i;
                     }
+                    DrawTexture(closeIco, bx - topButtonSize / 1.5, by - topButtonSize / 2, WHITE);
                 }
                 else {
                     DrawCircle(bx, by, topButtonSize, GRAY);
                     DrawCircle(bx1, by1, topButtonSize, GRAY);
+                    DrawTexture(closeIco, bx - topButtonSize / 1.5, by - topButtonSize / 2, LIGHTGRAY);
                 }
 
-                DrawTexture(closeIco, bx - topButtonSize / 1.5, by - topButtonSize / 2, WHITE);
 
                 //windows maximise button
                 bx = x + w - borderRadius * 4.5; by = y + borderRadius * 1.5;
@@ -482,11 +489,12 @@ int main(void)
                         windows[i][5] = !windows[i][5];
                     }
                     isHoveringTopButtons = true;
+                    DrawTexture(maximizeIco, bx - topButtonSize / 2, by - topButtonSize / 2, WHITE);
                 }
                 else {
                     DrawCircle(bx, by, topButtonSize, GRAY);
+                    DrawTexture(maximizeIco, bx - topButtonSize / 2, by - topButtonSize / 2, LIGHTGRAY);
                 }
-                DrawTexture(maximizeIco, bx - topButtonSize / 2, by - topButtonSize / 2, WHITE);
 
                 //windows minimize button
                 bx = x + w - borderRadius * 7; by = y + borderRadius * 1.5;
@@ -496,11 +504,12 @@ int main(void)
                     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                         windows[i][4] = !windows[i][4];
                     }
+                    DrawTexture(minimizeIco, bx - topButtonSize / 2, by - topButtonSize / 2, WHITE);
                 }
                 else {
                     DrawCircle(bx, by, topButtonSize, GRAY);
+                    DrawTexture(minimizeIco, bx - topButtonSize / 2, by - topButtonSize / 2, LIGHTGRAY);
                 }
-                DrawTexture(minimizeIco, bx - topButtonSize / 2, by - topButtonSize / 2, WHITE);
 
                 if (checkButtonBounds(x, y, w, h) && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
                     activeWindow = i;
