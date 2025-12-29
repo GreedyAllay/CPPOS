@@ -144,41 +144,40 @@ std::vector<Command> compileCode(std::string code) { //ts kinda tuff ngl
                     dataType = 1;
                     output += token;
                 }
-                else if (token == '"') {
+                else if (token == '\'') {
                     dataType = 2;
-                    continue;
                 }
             }
             //now we like scan the rest of this stupid shit till we reach the end at some point i hope
             else {
                 if (token == ',') {
                     dataType = -1;
-                    std::cout << "detected comma, geez this is scary, we've never encountered something like this before, will it work?";
+                    std::cout << "detected comma, geez this is scary, we've never encountered something like this before, will it work?\n";
                     arguments.push_back(output);
                     output = "";
-                    continue;
+                    continue; //this just skips one iteration so it doesnt scan the dumb little comma
                 }
                 if (dataType == 1) {
                     if (token == ')') {
                         endLoop = true;
                         arguments.push_back(output);
                         output = "";
-                        break;
+                        break; // exits the poop loop entirely so it stops scanning for the stuff and gives it to the return thinfgie
                     }
                     else {
-                        output += token;
+                        output += token; //add the shit to the shit
                     }
                 }
                 else if (dataType == 2) {
-                    if (token == '"') {
+                    if (token == '\'') {
                         endLoop = true;
                         arguments.push_back(output);
                         output = "";
-                        break;
-
+                        i += 2;
+                        continue;
                     }
                     else {
-                        output += token;
+                        output += token;  //appends the rest of the string to the stuff
                     }
                 }
                 else if (dataType == 3) {
@@ -202,7 +201,6 @@ std::vector<Command> compileCode(std::string code) { //ts kinda tuff ngl
         for (int i = 0; i < arguments.size(); i++) {
             std::cout << "argumentos: " + arguments[i] << "\n";
         }
-        break;
     }
 
     std::cout << "opcode: " << opcode << "\n";
@@ -260,7 +258,7 @@ void execute(std::vector<Command> bytecode) {
             case 1:
                 std::cout << "test complete!";
             case 2:
-                DrawText(args[0].c_str(), 0,0 , 20, RED);
+                DrawText(args[0].c_str(), stoi(args[1]), stoi(args[2]), stoi(args[3]), RED);
         }
 
     }
@@ -277,13 +275,7 @@ int main(void)
     //compileCode("echo(\"hello there\")");
     //std::cout << compileCode("test(69, 21)")[0].args[0];
 
-    execute(
-        compileCode("echo(\"WHAAAT\n\")")
-    );
 
-    execute(
-        compileCode("drawText(\"YOUR MOM :D\", 69, 21, 20, 20)")
-    );
     //return 0;
 
     //initial setup
@@ -306,13 +298,15 @@ int main(void)
 
 #endif
 
-    //load textures
+    //load textures 'n shit
 
     Texture2D bg = LoadTexture("images/backgrounds/windows.png");
     Texture2D closeIco = LoadTexture("images/icons/close.png");
     Texture2D minimizeIco = LoadTexture("images/icons/minimize.png");
     Texture2D maximizeIco = LoadTexture("images/icons/maximize.png");
     Texture2D programIco = LoadTexture("images/icons/program.png");
+
+    //sum setup
 
     bool isSelectingDesktop = false;
     int movingWindowID = -1;
@@ -370,6 +364,10 @@ int main(void)
         }
 
         DrawTextureEx(bg, { x, y }, 0, bgSize, WHITE); //the background gets drawn riiiiiight here my son
+
+        execute(
+            compileCode("drawText('HOMO IS GOOD', 30, 30, 20)")
+        );
 
 
         //execute(
