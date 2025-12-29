@@ -5,17 +5,22 @@
 #include <algorithm>
 #include <string>
 
+#include "config.h"
+
 float screenWidth = 800;
 float screenHeight = 450;
 
 std::vector<std::array<float, 6>> windows;
 std::vector<std::array<std::string, 2>> windowProps;
 
-#define useTextureMode 0; //better performance, but breaks whenever resized for some reason
+#define useTextureMode 0 //better performance, but breaks whenever resized for some reason
 
-#define debugInfo 0; 
+#define debugInfo 0
 
-#define themeColor BLACK;
+#define white {255, 255, 255, 255}
+#define transparentGray {125, 125, 125, 125}
+
+#define topButtons {125, 125, 125, 255}
 
 int getWinProps(int id, int property) {
     if (id < 0 || id >= windows.size()) {
@@ -76,7 +81,8 @@ void createWindow(
 
 }
 
-void drawTextSmart(std::string text, int startX, int startY, int width, int height) {
+
+void drawTextSmart(std::string text, int startX, int startY, int width, int height, Color color) {
     //testing some custom hightlighting stuff for text i came up with
 
     float textSize = 20;
@@ -109,7 +115,7 @@ void drawTextSmart(std::string text, int startX, int startY, int width, int heig
 
         MeasureText(chara.c_str(), textSize);
 
-        DrawText(chara.c_str(), charX, charY + (lineHeight * line), textSize, BLACK);
+        DrawText(chara.c_str(), charX, charY + (lineHeight * line), textSize, color);
 
 
         charX += textDims.x + spacing;
@@ -120,7 +126,7 @@ void drawTextSmart(std::string text, int startX, int startY, int width, int heig
 
 void renderTextField(int x, int y, int w, int h, std::string value) {
     DrawRectangle(x, y, w, h, GREEN);
-    drawTextSmart(value, x, y, w, h);
+    drawTextSmart(value, x, y, w, h, WHITE);
 }
 
 //std::vector<struct command>
@@ -138,7 +144,8 @@ std::vector<Command> compileCode(std::string code) { //ts kinda tuff ngl
         "test",
         "text",
         "rectangle",
-        "circle"
+        "circle",
+        "button"
     };
 
     //put whats below inside of a loop so ur mom can eat it as dinner and we can repeat it for every function
@@ -316,13 +323,46 @@ void execute(std::vector<Command> bytecode, int PID) {
                 std::cout << "test complete!";
                 break;
             case 2:
-                if(!minimized) drawTextSmart(args[0].c_str(), stoi(args[1]) + winX, stoi(args[2]) + winY, winW, winH);
+                if(!minimized) drawTextSmart(args[0].c_str(), stoi(args[1]) + winX, stoi(args[2]) + winY, winW, winH, WHITE);
                 break;
             case 3:
                 if(!minimized) DrawRectangle(stoi(args[0]) + winX, stoi(args[1]) + winY, stoi(args[2]), stoi(args[3]), RED);
                 break;
             case 4:
                 if(!minimized) DrawCircle(stoi(args[0]) + winX, stoi(args[1]) + winY, stoi(args[2]), RED);
+                break;
+            case 5:
+                if (!minimized) {
+                    int x = stoi(args[1]) + winX; int y = stoi(args[2]) + winY; int w = 100; int h = 30;
+                    int padding = 5;
+                    int fontSize = 20;
+                    int buttonX = MeasureText(args[0].c_str(), fontSize);
+                        if (checkButtonBounds(x, y, w, h)) {
+                            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                                Sound tickSound = LoadSound("audio/tick.mp3");
+
+                                PlaySound(tickSound);
+
+                            }
+                            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+                                DrawRectangle(x, y, w, h, themeColor);
+                                DrawRectangle(x + 2, y + 2, w - 4, h - 4, { 125, 125, 125, 125 });
+                                DrawText(args[0].c_str(), x + (w - buttonX) / 2, y + padding + 1, fontSize, WHITE);
+                            }
+                            else {
+                                DrawRectangle(x, y, w, h, themeColor);
+                                DrawRectangle(x+2, y+2, w-4, h-4, {255, 255, 255, 100});
+                                DrawText(args[0].c_str(), x + (w - buttonX) / 2, y + padding, fontSize, WHITE);
+                            }
+
+                        }
+                        else {
+                            DrawRectangle(x, y, w, h, GRAY);
+                            DrawText(args[0].c_str(), x + (w - buttonX) / 2, y + padding, fontSize, LIGHTGRAY);
+                        }
+
+                }
+                break; 
         }
         EndScissorMode();
 
@@ -333,13 +373,18 @@ void execute(std::vector<Command> bytecode, int PID) {
 
 void initialise() {
     execute(
-        compileCode("text('meow', 0, 20, 20)"), 0
+        compileCode("text('meow', 0, 0, 20, '{255, 255, 255, 255}')"), 0
     );
+#if 0:
     execute(
         compileCode("rectangle(20, 0, 20, 20)"), 0
     );
     execute(
         compileCode("circle(60, 0, 20)"), 0
+    );
+#endif
+    execute(
+        compileCode("button('test', 20, 20, 200, 50)"), 0
     );
     //renderTextField(getWinProps(0, 0), getWinProps(0, 1), getWinProps(0, 2) / 2, getWinProps(0, 3) / 2, "SEXOSOSOXOSOXOOSXOSOXOSXOSXOSXSOXOSX");
 }
@@ -363,8 +408,11 @@ int main(void)
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 
     InitWindow(screenWidth, screenHeight, "ok");
-
+    InitAudioDevice();
     windowProps.push_back({ "test", "test" });    //name, icon name
+    Sound tickSound = LoadSound("audio/tick.mp3");
+
+
 
 #if useTextureMode
 
@@ -384,8 +432,9 @@ int main(void)
     Texture2D maximizeIco = LoadTexture("images/icons/maximize.png");
     Texture2D programIco = LoadTexture("images/icons/program.png");
 
-    //sum setup
+    //load sounds 'n shit
 
+    //sum setup
     bool isSelectingDesktop = false;
     int movingWindowID = -1;
     int resizingWindowID = -1;
@@ -483,7 +532,7 @@ int main(void)
             if (newY < 0) {
                 newY = 0;
                 int padding = 20;
-                DrawRectangle(padding/2, padding/2, screenWidth - padding, (screenHeight - padding) - 50, GRAY);
+                DrawRectangle(padding/2, padding/2, screenWidth - padding, (screenHeight - padding) - 50, transparentGray);
             }
             windows[movingWindowID][0] = newX;
             windows[movingWindowID][1] = newY;
@@ -539,36 +588,36 @@ int main(void)
                     DrawRectangle(x - borderWidth + borderRadius, y - borderWidth + borderRadius, w - borderRadius - borderWidth * 2, h - borderRadius - borderWidth * 2, WHITE);
 
                     //window sides
-                    DrawRectangle(x, y + borderRadius, w, h - borderRadius * 2, WHITE);
+                    DrawRectangle(x, y + borderRadius, w, h - borderRadius * 2, univBgClr);
 
                     //window bottom
-                    DrawRectangle(x + borderRadius, y + h - borderRadius, w - borderRadius * 2, borderRadius, WHITE);
+                    DrawRectangle(x + borderRadius, y + h - borderRadius, w - borderRadius * 2, borderRadius, univBgClr);
 
                     //bottom corners
-                    DrawCircle(x + w - borderRadius, y + h - borderRadius, borderRadius, WHITE);
-                    DrawCircle(x + borderRadius, y + h - borderRadius, borderRadius, WHITE);
+                    DrawCircle(x + w - borderRadius, y + h - borderRadius, borderRadius, univBgClr);
+                    DrawCircle(x + borderRadius, y + h - borderRadius, borderRadius, univBgClr);
 
                     //topbar corners
-                    DrawCircle(x + borderRadius, y + borderRadius, borderRadius, LIGHTGRAY);
-                    DrawCircle(x + w - borderRadius, y + borderRadius, borderRadius, LIGHTGRAY);
+                    DrawCircle(x + borderRadius, y + borderRadius, borderRadius, windTbClr);
+                    DrawCircle(x + w - borderRadius, y + borderRadius, borderRadius, windTbClr);
 
                     //topbar bar
-                    DrawRectangle(x + borderRadius, y, w - borderRadius * 2, barHeight, LIGHTGRAY);
+                    DrawRectangle(x + borderRadius, y, w - borderRadius * 2, barHeight, windTbClr);
 
                     //topbar bar under the rounded corners
-                    DrawRectangle(x, y + borderRadius, w, borderRadius * 2, LIGHTGRAY);
+                    DrawRectangle(x, y + borderRadius, w, borderRadius * 2, windTbClr);
 
                     //EndTextureMode();
                     //DrawTextureRec(drawWindow.texture, Rectangle{ x, 0 - y, w, h }, Vector2{ x, y }, WHITE);
                 }
                 else {
                     DrawRectangle(x - borderWidth, y - borderWidth, w + borderWidth * 2, h + borderWidth * 2, BLACK);
-                    DrawRectangle(x, y, w, h, WHITE);
-                    DrawRectangle(x, y, w, barHeight, LIGHTGRAY);
+                    DrawRectangle(x, y, w, h, univBgClr);
+                    DrawRectangle(x, y, w, barHeight, univBgClr);
                 }
 
                 //window title :O
-                DrawText(windowProps[i][0].c_str(), x + 35, y + 6, 17, BLACK);
+                DrawText(windowProps[i][0].c_str(), x + 35, y + 6, 17, white);
 
                 //window icon
                 DrawTextureEx(programIco, { x+ 5, y + barHeight/20 }, 0, 1.5, WHITE);
@@ -587,8 +636,8 @@ int main(void)
                     DrawTexture(closeIco, bx - topButtonSize / 1.5, by - topButtonSize / 2, WHITE);
                 }
                 else {
-                    DrawCircle(bx, by, topButtonSize, GRAY);
-                    DrawCircle(bx1, by1, topButtonSize, GRAY);
+                    DrawCircle(bx, by, topButtonSize, tbBtnClr);
+                    DrawCircle(bx1, by1, topButtonSize, tbBtnClr);
                     DrawTexture(closeIco, bx - topButtonSize / 1.5, by - topButtonSize / 2, LIGHTGRAY);
                 }
 
@@ -604,7 +653,7 @@ int main(void)
                     DrawTexture(maximizeIco, bx - topButtonSize / 2, by - topButtonSize / 2, WHITE);
                 }
                 else {
-                    DrawCircle(bx, by, topButtonSize, GRAY);
+                    DrawCircle(bx, by, topButtonSize, tbBtnClr);
                     DrawTexture(maximizeIco, bx - topButtonSize / 2, by - topButtonSize / 2, LIGHTGRAY);
                 }
 
@@ -619,7 +668,7 @@ int main(void)
                     DrawTexture(minimizeIco, bx - topButtonSize / 2, by - topButtonSize / 2, WHITE);
                 }
                 else {
-                    DrawCircle(bx, by, topButtonSize, GRAY);
+                    DrawCircle(bx, by, topButtonSize, tbBtnClr);
                     DrawTexture(minimizeIco, bx - topButtonSize / 2, by - topButtonSize / 2, LIGHTGRAY);
                 }
 
@@ -768,6 +817,7 @@ int main(void)
     UnloadTexture(minimizeIco);
     UnloadTexture(maximizeIco);
     UnloadTexture(programIco);
+    CloseAudioDevice();
 #if useTextureMode
     UnloadRenderTexture(desktopRender);
 #endif
