@@ -66,6 +66,50 @@ void createWindow(
 
 }
 
+void drawTextSmart(std::string text, int startX, int startY, int width, int height) {
+    //testing some custom hightlighting stuff for text i came up with
+
+    float textSize = 20;
+    float spacing = 2;
+    float line = 0;
+
+    float charX = startX;
+    float charY = startY;
+
+    int clipW;
+    int clipH;
+
+    BeginScissorMode(charX, charY - 30, width, height);
+
+    //std::string text = "x: " + std::to_string(startX) + " y: " + std::to_string(startY) + " w: " + std::to_string(width) + " h: " + std::to_string(height);
+
+    for (int i = 0; i < text.length(); i++) {
+        std::string chara(1, text[i]);
+
+        Vector2 textDims = MeasureTextEx(GetFontDefault(), chara.c_str(), textSize, 0);
+        float lineHeight = textDims.y;
+
+        if (
+            text[i] == '\n' ||
+            charX + textDims.x + spacing * 2 > startX + width
+            ) {
+            line++;
+            charX = startX;
+            continue;
+        }
+
+        MeasureText(chara.c_str(), textSize);
+
+        DrawText(chara.c_str(), charX, charY + (lineHeight * line), textSize, BLACK);
+
+
+        charX += textDims.x + spacing;
+
+
+    }
+    EndScissorMode();
+}
+
 //std::vector<struct command>
 //#if 0
 
@@ -247,7 +291,12 @@ std::vector<Command> compileCode(std::string code) { //ts kinda tuff ngl
 
 }
 
-void execute(std::vector<Command> bytecode) {
+void execute(std::vector<Command> bytecode, int PID) {
+    int winX = getWinProps(PID, 0);
+    int winY = getWinProps(PID, 1);
+    int winW = getWinProps(PID, 2);
+    int winH = getWinProps(PID, 3);
+
     for (int i = 0; i < bytecode.size(); i++) {
         int opcode = bytecode[i].opcode;
         std::vector<std::string> args = bytecode[i].args;
@@ -258,13 +307,20 @@ void execute(std::vector<Command> bytecode) {
             case 1:
                 std::cout << "test complete!";
             case 2:
-                DrawText(args[0].c_str(), stoi(args[1]), stoi(args[2]), stoi(args[3]), RED);
+                drawTextSmart("cancer", stoi(args[1]) + winX, stoi(args[2]) + winY, winW, winH);
+
         }
 
     }
 }
  
 //#endif
+
+void initialise() {
+    execute(
+        compileCode("drawText(67, 30, 30, 20)"), 0
+    );
+}
 
 int main(void)
 {
@@ -364,10 +420,6 @@ int main(void)
         }
 
         DrawTextureEx(bg, { x, y }, 0, bgSize, WHITE); //the background gets drawn riiiiiight here my son
-
-        execute(
-            compileCode("drawText('HOMO IS GOOD', 30, 30, 20)")
-        );
 
 
         //execute(
@@ -622,6 +674,8 @@ int main(void)
             }
         }
 
+        initialise();
+
         //taskbar shenanigans
 
         const int taskBarHeight = 50;
@@ -681,55 +735,7 @@ int main(void)
 
 		//the best game ever is not called CPPOS, its called raylib... sike! its called not that, its also not called that, its called poopity scoopity whoopity woo why did you do that? because i am bored okay... why are you bored? because i have no friends... me too thanks. I'm sorry you feel that way. here's a cookie. *hands cookie* thanks! *eats cookie* mmm... this cookie is good. i'm glad you like it. yeah me too. wanna be friends? sure! yay! friends forever! yep! the end.
 
-        //testing some custom hightlighting stuff for text i came up with
-
-
-
-        float width = getWinProps(0, 2);
-        float height = getWinProps(0, 3);
-
-        float textSize = 20;
-        float spacing = 2;
-        float line = 0;
-
-        float startX = getWinProps(0, 0) + spacing;
-        float startY = getWinProps(0, 1) + 30;
-
-        float charX = startX;
-        float charY = startY;
-
-        int clipW;
-        int clipH;
-
-        BeginScissorMode(charX, charY-30, width, height);
-
-        std::string text = "x: " + std::to_string(startX)+" y: " + std::to_string(startY)+ " w: " + std::to_string(width) + " h: " + std::to_string(height);
-
-        for (int i = 0; i < text.length(); i++) {
-			std::string chara(1, text[i]);
-
-            Vector2 textDims = MeasureTextEx(GetFontDefault(), chara.c_str(), textSize, 0);
-            float lineHeight = textDims.y;
-
-            if (
-                text[i] == '\n' ||
-                charX + textDims.x + spacing*2 > startX+width
-                ) {
-                line++;
-                charX = startX;
-                continue;
-            }
-
-            MeasureText(chara.c_str(), textSize);
-
-            DrawText(chara.c_str(), charX, charY + (lineHeight * line), textSize, BLACK);
-
-
-            charX += textDims.x + spacing;
-
-
-        }
-        EndScissorMode();
+        
 #if useTextureMode
         EndTextureMode();
 
