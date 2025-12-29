@@ -307,7 +307,7 @@ void execute(std::vector<Command> bytecode, int PID) {
             case 1:
                 std::cout << "test complete!";
             case 2:
-                drawTextSmart("zamn", stoi(args[1]) + winX, stoi(args[2]) + winY, winW, winH);
+                drawTextSmart("cancer", stoi(args[1]) + winX, stoi(args[2]) + winY, winW, winH);
 
         }
 
