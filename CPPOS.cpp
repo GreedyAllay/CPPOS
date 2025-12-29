@@ -22,8 +22,11 @@ int getWinProps(int id, int property) {
         return -1;
     }
     if (windows[id][5]) {
-        if (property == 0||property == 1) { // x and y
+        if (property == 0) { // x and y
             return 0;
+        }
+        else if (property == 1) {
+            return 30;
         }
         else if (property == 2) { //wdth
             return screenWidth;
@@ -32,7 +35,14 @@ int getWinProps(int id, int property) {
             return screenHeight;
         }
     }
-    return windows[id][property];
+    if (property == 1) {
+        return windows[id][property] + 30;
+
+    }
+    else {
+        return windows[id][property];
+
+    }
 }
 
 int checkButtonBounds(int x, int y, int w, int h) {
@@ -79,7 +89,6 @@ void drawTextSmart(std::string text, int startX, int startY, int width, int heig
     int clipW;
     int clipH;
 
-    BeginScissorMode(charX, charY - 30, width, height);
 
     //std::string text = "x: " + std::to_string(startX) + " y: " + std::to_string(startY) + " w: " + std::to_string(width) + " h: " + std::to_string(height);
 
@@ -107,7 +116,11 @@ void drawTextSmart(std::string text, int startX, int startY, int width, int heig
 
 
     }
-    EndScissorMode();
+}
+
+void renderTextField(int x, int y, int w, int h, std::string value) {
+    DrawRectangle(x, y, w, h, GREEN);
+    drawTextSmart(value, x, y, w, h);
 }
 
 //std::vector<struct command>
@@ -123,7 +136,9 @@ std::vector<Command> compileCode(std::string code) { //ts kinda tuff ngl
     const std::vector<std::string> functions = {
         "echo",
         "test",
-        "drawText"
+        "text",
+        "rectangle",
+        "circle"
     };
 
     //put whats below inside of a loop so ur mom can eat it as dinner and we can repeat it for every function
@@ -196,7 +211,7 @@ std::vector<Command> compileCode(std::string code) { //ts kinda tuff ngl
             else {
                 if (token == ',') {
                     dataType = -1;
-                    std::cout << "detected comma, geez this is scary, we've never encountered something like this before, will it work?\n";
+                    //std::cout << "detected comma, geez this is scary, we've never encountered something like this before, will it work?\n";
                     arguments.push_back(output);
                     output = "";
                     continue; //this just skips one iteration so it doesnt scan the dumb little comma
@@ -240,15 +255,15 @@ std::vector<Command> compileCode(std::string code) { //ts kinda tuff ngl
             }
         }
         //we done bitch
-        std::cout << "argument: " << output << "\n";
-        std::cout << "datatype: " + std::to_string(dataType) << "\n";
+        //std::cout << "argument: " << output << "\n";
+        //std::cout << "datatype: " + std::to_string(dataType) << "\n";
         for (int i = 0; i < arguments.size(); i++) {
-            std::cout << "argumentos: " + arguments[i] << "\n";
+            //std::cout << "argumentos: " + arguments[i] << "\n";
         }
     }
 
-    std::cout << "opcode: " << opcode << "\n";
-    std::cout << "---\n";
+    //std::cout << "opcode: " << opcode << "\n";
+    //std::cout << "---\n";
 
     //create bytecode right the fuck now
 
@@ -266,27 +281,17 @@ std::vector<Command> compileCode(std::string code) { //ts kinda tuff ngl
 
     //std::cout << opcode;
     //std::cout << output;
-
-
     //*read until you have a "(". do this inside of the character scanning loop 
-
     //then store the index of this function from the function list inside of a variable and reset the output variable
-
     //*break, and create a new loop that does the same so it can be re - used
-
     //then, scan without storing until you reach a valid token(to prevent whitespace errors)
-
     //*then check what type this value is.If it starts with ", then it's a string,
     //if it's a number, its a number, if it is equal to true or false a boolean, if it starts with anything but these,
     //assume it's a variable.
-
     //*Then scan and append each token until you reach ), " or ", ". in the case of a string, scan until you
     //reach the " and then check if there's a ) or ", " after that. If there's a ", ", restart this loop and increase the argument count by 1 so we can store it as another one later, until we finally reach a ).
-
     //*then store the scanned values into the args variable, repeat
-
     //then repeat the entire thing until you reach the end.There's your little bytecode interpreter
-
         //woah, really? 
 
 }
@@ -296,20 +301,30 @@ void execute(std::vector<Command> bytecode, int PID) {
     int winY = getWinProps(PID, 1);
     int winW = getWinProps(PID, 2);
     int winH = getWinProps(PID, 3);
+    int minimized = getWinProps(PID, 4);
 
     for (int i = 0; i < bytecode.size(); i++) {
         int opcode = bytecode[i].opcode;
         std::vector<std::string> args = bytecode[i].args;
+        BeginScissorMode(winX, winY, winW, winH - 30);
+
         switch (opcode) {
             case 0: 
                 std::cout << args[0];
                 break;
             case 1:
                 std::cout << "test complete!";
+                break;
             case 2:
-                drawTextSmart("zamn", stoi(args[1]) + winX, stoi(args[2]) + winY, winW, winH);
-
+                if(!minimized) drawTextSmart(args[0].c_str(), stoi(args[1]) + winX, stoi(args[2]) + winY, winW, winH);
+                break;
+            case 3:
+                if(!minimized) DrawRectangle(stoi(args[0]) + winX, stoi(args[1]) + winY, stoi(args[2]), stoi(args[3]), RED);
+                break;
+            case 4:
+                if(!minimized) DrawCircle(stoi(args[0]) + winX, stoi(args[1]) + winY, stoi(args[2]), RED);
         }
+        EndScissorMode();
 
     }
 }
@@ -318,8 +333,15 @@ void execute(std::vector<Command> bytecode, int PID) {
 
 void initialise() {
     execute(
-        compileCode("drawText(67, 30, 30, 20)"), 0
+        compileCode("text('meow', 0, 20, 20)"), 0
     );
+    execute(
+        compileCode("rectangle(20, 0, 20, 20)"), 0
+    );
+    execute(
+        compileCode("circle(60, 0, 20)"), 0
+    );
+    //renderTextField(getWinProps(0, 0), getWinProps(0, 1), getWinProps(0, 2) / 2, getWinProps(0, 3) / 2, "SEXOSOSOXOSOXOOSXOSOXOSXOSXOSXSOXOSX");
 }
 
 int main(void)
@@ -420,13 +442,6 @@ int main(void)
         }
 
         DrawTextureEx(bg, { x, y }, 0, bgSize, WHITE); //the background gets drawn riiiiiight here my son
-
-
-        //execute(
-        //    compileCode("drawText(\"SEXUAL ABUSE :D\", 69, 21, 20, 20)")
-        //);
-
-        //compileCode("drawText(\"HOLY FUCKING SHIT\")");
 
 
         //render desktop selection
