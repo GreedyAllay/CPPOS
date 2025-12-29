@@ -333,10 +333,11 @@ void execute(std::vector<Command> bytecode, int PID) {
                 break;
             case 5:
                 if (!minimized) {
-                    int x = stoi(args[1]) + winX; int y = stoi(args[2]) + winY; int w = 100; int h = 30;
-                    int padding = 5;
                     int fontSize = 20;
-                    int buttonX = MeasureText(args[0].c_str(), fontSize);
+                    int buttonW = MeasureText(args[0].c_str(), fontSize);
+                    int sidePadding = 20;
+                    int x = stoi(args[1]) + winX; int y = stoi(args[2]) + winY; int w = buttonW + sidePadding; int h = 30;
+                    int padding = 5;
                         if (checkButtonBounds(x, y, w, h)) {
                             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                                 Sound tickSound = LoadSound("audio/tick.mp3");
@@ -347,18 +348,18 @@ void execute(std::vector<Command> bytecode, int PID) {
                             if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
                                 DrawRectangle(x, y, w, h, themeColor);
                                 DrawRectangle(x + 2, y + 2, w - 4, h - 4, { 125, 125, 125, 125 });
-                                DrawText(args[0].c_str(), x + (w - buttonX) / 2, y + padding + 1, fontSize, WHITE);
+                                DrawText(args[0].c_str(), x + (w - buttonW) / 2, y + padding + 1, fontSize, LIGHTGRAY);
                             }
                             else {
                                 DrawRectangle(x, y, w, h, themeColor);
                                 DrawRectangle(x+2, y+2, w-4, h-4, {255, 255, 255, 100});
-                                DrawText(args[0].c_str(), x + (w - buttonX) / 2, y + padding, fontSize, WHITE);
+                                DrawText(args[0].c_str(), x + (w - buttonW) / 2, y + padding, fontSize, WHITE);
                             }
 
                         }
                         else {
                             DrawRectangle(x, y, w, h, GRAY);
-                            DrawText(args[0].c_str(), x + (w - buttonX) / 2, y + padding, fontSize, LIGHTGRAY);
+                            DrawText(args[0].c_str(), x + (w - buttonW) / 2, y + padding, fontSize, LIGHTGRAY);
                         }
 
                 }
@@ -372,6 +373,8 @@ void execute(std::vector<Command> bytecode, int PID) {
 //#endif
 
 void initialise() {
+
+    //next step is to have spawning a window like run its own code
     execute(
         compileCode("text('meow', 0, 0, 20, '{255, 255, 255, 255}')"), 0
     );
@@ -384,8 +387,18 @@ void initialise() {
     );
 #endif
     execute(
-        compileCode("button('test', 20, 20, 200, 50)"), 0
+        compileCode("button('new', 0, 0, 200, 50)"), 0
     );
+    execute(
+        compileCode("button('load', 60, 0, 200, 50)"), 0
+    );
+    execute(
+        compileCode("button('save', 125, 0, 200, 50)"), 0
+    );
+    execute(
+        compileCode("text('unnamed.txt', 200, 5)"), 0
+    );
+
     //renderTextField(getWinProps(0, 0), getWinProps(0, 1), getWinProps(0, 2) / 2, getWinProps(0, 3) / 2, "SEXOSOSOXOSOXOOSXOSOXOSXOSXOSXSOXOSX");
 }
 
@@ -660,7 +673,7 @@ int main(void)
                 //windows minimize button
                 bx = x + w - borderRadius * 7; by = y + borderRadius * 1.5;
                 if (checkCircleBounds(bx, by, topButtonSize)) {
-                    DrawCircle(bx, by, topButtonSize, GREEN);
+                    DrawCircle(bx, by, topButtonSize, {58, 189, 51, 255});
                     isHoveringTopButtons = true;
                     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                         windows[i][4] = !windows[i][4];
@@ -793,6 +806,9 @@ int main(void)
 
             }
 
+            DrawTextureEx(programIco, { x, y }, 0, 3, WHITE);
+
+
         }
 
 
@@ -831,4 +847,3 @@ int main(void)
 //  
 //    --- Compiler ---
 // Axolay (aka Greedy Allay)
-
